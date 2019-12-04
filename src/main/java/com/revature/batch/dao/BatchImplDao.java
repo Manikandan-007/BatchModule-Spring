@@ -5,13 +5,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Savepoint;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
 import com.revature.batch.dto.BatchDataDto;
 import com.revature.batch.exception.DBException;
-import com.revature.batch.exception.ServiceException;
 import com.revature.batch.model.ActiveDay;
 import com.revature.batch.model.Batch;
 import com.revature.batch.model.CoTrainer;
@@ -44,6 +44,7 @@ public class BatchImplDao {
 				pst.setTime(6, batchDataDto.getBatch().getStartTime());
 				
 				BatchRows = pst.executeUpdate();
+				pst.close();
 
 				int batchId = 0;
 					sql = "select last_insert_id()";
@@ -91,6 +92,50 @@ public class BatchImplDao {
 			throw new DBException(MessageConstants.UNABLE_TO_STORE);
 		}
 		return containerRows;
+	}
+	
+	public List<Batch> getBatchList() {
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+		
+		List<Batch> list;
+		try {
+			con = ConnectionUtil.getConnection();
+			String sql = "select * from batches";
+			pst = con.prepareStatement(sql);
+			rs = pst.executeQuery();
+			list = new ArrayList<Batch>();
+			while (rs.next()) {
+				Batch batch = toRow1(rs);
+				list.add(batch);
+			}
+		} catch (DBException e) {
+			throw new DBException(MessageConstants.UNABLE_TO_STORE);
+		} catch (SQLException e) {
+			throw new DBException(MessageConstants.UNABLE_TO_STORE);
+		}
+		
+		return list;
+	}
+
+	private Batch toRow1(ResultSet rs) {
+		Timestamp datetime = rs.getTimestamp("Transaction_Date");
+		Integer actno = rs.getInt("Account_id");
+		String part = rs.getString("Particulars");
+		int credit = rs.getInt("Credit");
+		Integer debit = rs.getInt("Debit");
+		long balance = rs.getLong("Balance");
+		
+		Transaction translist = new Transaction();
+		translist.setDateTime(datetime.toLocalDateTime());
+		translist.setActNo(actno);
+		translist.setParticulars(part);
+		translist.setCredit(credit);
+		translist.setDebit(debit);
+		translist.setBalance(balance);
+		
+		return 
 	}
 
 }

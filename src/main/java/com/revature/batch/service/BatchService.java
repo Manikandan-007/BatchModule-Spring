@@ -9,6 +9,7 @@ import com.revature.batch.dao.BatchImplDao;
 import com.revature.batch.dto.BatchDataDto;
 import com.revature.batch.exception.DBException;
 import com.revature.batch.exception.ServiceException;
+import com.revature.batch.model.Batch;
 import com.revature.batch.util.MessageConstants;
 import com.revature.batch.validator.BatchValidator;
 
@@ -17,13 +18,16 @@ public class BatchService {
 	
 	@Autowired
 	private BatchImplDao batchImplDao;
+	
+	@Autowired
+	private BatchValidator batchValidator;
 
 	public int batchCreationService(BatchDataDto batchDataDto) throws ServiceException {
 
 		int isBatchCreated = 0;
 		try {
 			
-			new BatchValidator().createBatchValidator(batchDataDto);
+			batchValidator.createBatchValidator(batchDataDto);
 			
 			isBatchCreated = batchImplDao.createBatchDao(batchDataDto);
 			
@@ -39,7 +43,7 @@ public class BatchService {
 
 	public List<BatchDataDto> batchListService() throws ServiceException {
 		
-		
+		List<Batch> batchList = batchImplDao.getBatchList();
 		
 		
 		return null;
