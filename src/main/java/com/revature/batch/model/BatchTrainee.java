@@ -11,4 +11,6 @@ public class BatchTrainee {
 	private int candidateId;
 	private int activeStatus;
 	private Timestamp added_on;
+	
+	private Candidate candidate;
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.revature.batch.dto.BatchDataDto;
+import com.revature.batch.dto.BatchListDto;
 import com.revature.batch.exception.ServiceException;
 import com.revature.batch.service.BatchService;
 import com.revature.batch.util.Message;
@@ -45,14 +46,13 @@ public class CreateBatch {
 	
 	@GetMapping("/batch_list")
 	@ApiOperation(value = "Batch API")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = Message.class),
-			@ApiResponse(code = 400, message = "Invalid Credentials", response = Message.class) })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = List.class),
+			@ApiResponse(code = 400, message = "Unable to get data", response = Message.class) })
 	public ResponseEntity<?> batchList() {
 	
 		try {
-			List<BatchDataDto> batchinfo = batchService.batchListService();
-			Message message = new Message("Batch Created Successfully");
-			return new ResponseEntity<>(message, HttpStatus.OK );
+			List<BatchListDto> batchListDto = batchService.batchListService();
+			return new ResponseEntity<>(batchListDto, HttpStatus.OK );
 		} catch (ServiceException e) {
 			Message message = new Message(e.getMessage());
 			return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST );

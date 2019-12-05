@@ -24,3 +24,5 @@ public class BatchDataDto {
 		this.coTrainer = coTrainer;
 	}
 }
+
+
