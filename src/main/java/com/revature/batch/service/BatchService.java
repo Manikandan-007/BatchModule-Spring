@@ -10,10 +10,13 @@ import com.revature.batch.dao.BatchTraineeDaoImpl;
 import com.revature.batch.dto.BatchDataDto;
 import com.revature.batch.dto.BatchListDto;
 import com.revature.batch.dto.CoTrainerListDto;
+import com.revature.batch.dto.RemovedCoTrainerAndDays;
 import com.revature.batch.exception.DBException;
 import com.revature.batch.exception.ServiceException;
+import com.revature.batch.exception.ValidatorException;
+import com.revature.batch.model.ActiveDay;
 import com.revature.batch.model.BatchTrainee;
-import com.revature.batch.util.MessageConstants;
+import com.revature.batch.model.CoTrainer;
 import com.revature.batch.validator.BatchValidator;
 
 @Service
@@ -28,23 +31,34 @@ public class BatchService {
 	@Autowired
 	private BatchTraineeDaoImpl batchTraineeDaoImpl;
 
-	public int batchCreationService(BatchDataDto batchDataDto) throws ServiceException {
+	public RemovedCoTrainerAndDays batchCreationService(BatchDataDto batchDataDto) throws ServiceException {
 
-		int isBatchCreated = 0;
+		RemovedCoTrainerAndDays removedCoTrainerAndDays = null;
 		try {
 			
-			batchValidator.createBatchValidator(batchDataDto);
+			removedCoTrainerAndDays = batchValidator.createBatchValidator(batchDataDto);
 			
-			isBatchCreated = batchImplDao.createBatchDao(batchDataDto);
+			List<ActiveDay> dayList = batchDataDto.getDayList();
+			List<CoTrainer> coTrainerList = batchDataDto.getCoTrainer();
 			
-			if(isBatchCreated!=1) {
-				throw new ServiceException(MessageConstants.UNABLE_TO_STORE);
-			}
+			//Remove failed data in validation from CoTrainerList and DayList 
+			coTrainerList.removeAll(removedCoTrainerAndDays.getCoTrainerList());
+			dayList.removeAll(removedCoTrainerAndDays.getDayList());
+			
+			batchDataDto.setCoTrainer(coTrainerList);
+			batchDataDto.setDayList(dayList);
+			
+			System.out.println(batchDataDto);
+			System.out.println(removedCoTrainerAndDays);
+			batchImplDao.createBatchDao(batchDataDto);
+			
 		} catch (DBException e) {
+			throw new ServiceException(e.getMessage());
+		} catch (ValidatorException e) {
 			throw new ServiceException(e.getMessage());
 		}
 		
-		return 1;
+		return removedCoTrainerAndDays;
 	}
 
 	public List<BatchListDto> batchListService() throws ServiceException {

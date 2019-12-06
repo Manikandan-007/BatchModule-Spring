@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.revature.batch.dto.BatchDataDto;
 import com.revature.batch.dto.BatchListDto;
+import com.revature.batch.dto.RemovedCoTrainerAndDays;
 import com.revature.batch.exception.ServiceException;
 import com.revature.batch.service.BatchService;
 import com.revature.batch.util.Message;
@@ -35,8 +36,8 @@ public class CreateBatch {
 	public ResponseEntity<?> batchCreation(@RequestBody BatchDataDto batchDataDto) {
 	
 		try {
-			batchService.batchCreationService(batchDataDto);
-			Message message = new Message("Batch Created Successfully");
+			RemovedCoTrainerAndDays removedCoTrainerAndDays = batchService.batchCreationService(batchDataDto);
+			Message message = new Message("Batch Created Successfully except these data, "+removedCoTrainerAndDays);
 			return new ResponseEntity<>(message, HttpStatus.OK );
 		} catch (ServiceException e) {
 			Message message = new Message(e.getMessage());

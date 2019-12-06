@@ -17,4 +17,6 @@ public class MessageConstants {
 		public static final String TRAINEE_ALREADY_ADDED = " Already added in this batch";
 
 		public static final String UNABLE_TO_GET_BATCH_TRAINEE_LIST = "Unable to get the batche trainee list";
+
+		public static final String UNABLE_TO_GET_DAY = "Unable to get days";
 }

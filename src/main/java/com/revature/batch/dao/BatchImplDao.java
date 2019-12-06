@@ -25,14 +25,11 @@ import com.revature.batch.util.MessageConstants;
 @Repository
 public class BatchImplDao {
 	
-	public int createBatchDao(BatchDataDto batchDataDto) throws DBException {
+	public void createBatchDao(BatchDataDto batchDataDto) throws DBException {
 		
 		Connection con = null;
 		PreparedStatement pst = null;
 		ResultSet rs = null;
-		int BatchRows = 0;
-		int activeDayRows = 0;
-		int containerRows = 0;
 		Savepoint addbatches = null;
 		try {
 				con = ConnectionUtil.getConnection();
@@ -46,8 +43,7 @@ public class BatchImplDao {
 				pst.setInt(4, batchDataDto.getBatch().getTrainerId());
 				pst.setInt(5, batchDataDto.getBatch().getActiveHrs());
 				pst.setTime(6, batchDataDto.getBatch().getStartTime());
-				
-				BatchRows = pst.executeUpdate();
+				pst.executeUpdate();
 				pst.close();
 
 				int batchId = 0;
@@ -59,26 +55,36 @@ public class BatchImplDao {
 					batchId = rs.getInt("last_insert_id()");
 					System.out.println(batchId);
 				}
-	
-				List<ActiveDay> dayList = batchDataDto.getDayList();
-				for (ActiveDay activeDay : dayList) {
-					sql = "insert into active_day (day_id, batch_id) values (?, ?)";
-					pst = con.prepareStatement(sql);
-					pst.setInt(1, activeDay.getDayId());
-					pst.setInt(2, batchId);
-					
-					activeDayRows = pst.executeUpdate();
-				}
 				
-				List<CoTrainer> coTrainerList = batchDataDto.getCoTrainer();
-				for (CoTrainer coTrainer : coTrainerList) {
-					sql = "insert into cotrainers (trainer_id, batch_id) values (?, ?)";
-					pst = con.prepareStatement(sql);
-					pst.setInt(1, coTrainer.getTrainerId());
-					pst.setInt(2, batchId);
-					
-					containerRows = pst.executeUpdate();
+				//Day List Insertion
+				List<ActiveDay> dayList = batchDataDto.getDayList();
+				String dayDataStr = "";
+				int count = 0;
+				for (ActiveDay activeDay : dayList) {
+					dayDataStr = dayDataStr + "("+activeDay.getDayId()+","+batchId+")";
+					count ++;
+					if(count < dayList.size()) {
+						dayDataStr = dayDataStr + ",";
+					}
 				}
+				sql = "insert into active_day (day_id, batch_id) values " + dayDataStr;
+				pst = con.prepareStatement(sql);
+				pst.executeUpdate();
+				
+				//CoTrainer List Insertion
+				List<CoTrainer> coTrainerList = batchDataDto.getCoTrainer();
+				String CoTrainerDataStr = "";
+				int count1 = 0;
+				for (CoTrainer coTrainer : coTrainerList) {
+					CoTrainerDataStr = CoTrainerDataStr + "("+coTrainer.getTrainerId()+","+batchId+")";
+					count1 ++;
+					if(count1 < coTrainerList.size()) {
+						CoTrainerDataStr = CoTrainerDataStr + ",";
+					}
+				}
+				sql = "insert into cotrainers (trainer_id, batch_id) values "+ CoTrainerDataStr;
+				pst = con.prepareStatement(sql);
+				pst.executeUpdate();
 				
 				con.commit();
 		} catch (SQLException e) {
@@ -87,17 +93,12 @@ public class BatchImplDao {
 			} catch (SQLException e1) {
 				System.out.println(e1.getMessage());
 			}
-			throw new DBException(MessageConstants.UNABLE_TO_STORE);
+			throw new DBException(e.getMessage());
 		} finally {
 			ConnectionUtil.close(con, pst, rs);
 		}
-		
-		if(BatchRows==0 || activeDayRows==0 || containerRows==0) {
-			throw new DBException(MessageConstants.UNABLE_TO_STORE);
-		}
-		return containerRows;
 	}
-	
+
 	public List<BatchListDto> getBatchList() {
 		Connection con = null;
 		PreparedStatement pst = null;
@@ -106,7 +107,10 @@ public class BatchImplDao {
 		List<BatchListDto> list;
 		try {
 			con = ConnectionUtil.getConnection();
-			String sql = "select b.id, b.name, b.start_date, b.end_date, b.trainer_id, b.active_hrs, b.start_time, b.created_on, t.id, t.name, t.mobile, t.email, t.created_on  from batches b, trainers t where b.trainer_id=t.id";
+			String sql = "select b.id, b.name, b.start_date, b.end_date, "
+					+ " b.trainer_id, b.active_hrs, b.start_time, b.created_on, t.id, "
+					+ " t.name, t.mobile, t.email, t.created_on  from batches b, trainers t "
+					+ " where b.trainer_id=t.id";
 			pst = con.prepareStatement(sql);
 			
 			rs = pst.executeQuery();
@@ -169,7 +173,8 @@ public class BatchImplDao {
 		List<CoTrainerListDto> coTrainerList;
 			try {
 				con = ConnectionUtil.getConnection();
-				String sql = "select c.id, c.trainer_id, c.batch_id, t.id, t.name, t.mobile, t.email, t.created_on  from cotrainers c, trainers t where c.trainer_id=t.id and c.batch_id = ?";
+				String sql = "select c.id, c.trainer_id, c.batch_id, t.id, t.name, t.mobile, t.email,"
+						+ " t.created_on  from cotrainers c, trainers t where c.trainer_id=t.id and c.batch_id = ?";
 				pst = con.prepareStatement(sql);
 				pst.setInt(1, batchID);
 				
