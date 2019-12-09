@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import com.revature.batch.dto.BatchTraineeDto;
 import com.revature.batch.dto.RemovedCoTrainerAndDays;
 import com.revature.batch.exception.ValidatorException;
 import com.revature.batch.model.ActiveDay;
+import com.revature.batch.model.Candidate;
 import com.revature.batch.model.CoTrainer;
 
 @Service
@@ -71,8 +74,8 @@ public class BatchValidator {
 		System.out.println(dayList);
 		//Store Removed list into RemovedCoTrainerAndDays dto class
 		RemovedCoTrainerAndDays removedCoTrainerAndDays = new RemovedCoTrainerAndDays(); 
-		removedCoTrainerAndDays.setCoTrainerList(coTrainerList);
-		removedCoTrainerAndDays.setDayList(dayList);
+		removedCoTrainerAndDays.setCoTrainerList(coTrainerListCopy);
+		removedCoTrainerAndDays.setDayList(dayListCopy);
 		return removedCoTrainerAndDays;	
 	}
 
@@ -81,12 +84,19 @@ public class BatchValidator {
 		System.out.println("======>"+batchTraineeList);
 		List<BatchTraineeDto> batchTraineeList1 = new ArrayList<BatchTraineeDto>();
 		
-		for (BatchTraineeDto batchTraineeDto : batchTraineeList) {
-			boolean candidate = candidateDaoImpl.getCandidate(batchTraineeDto.getUserMail());
-		    if(candidate != true) {
-		    	batchTraineeList1.add(batchTraineeDto);
-			}
-		}
+			List<Candidate> candidateList = candidateDaoImpl.getCandidate(batchTraineeList);
+			List<String> availableCandidateEmails= candidateList.stream().map(candidate -> candidate.getEmail()).collect(Collectors.toList());
+			
+			List<BatchTraineeDto> availableCandidates = batchTraineeList.stream().filter(batchTrainee -> availableCandidateEmails.contains(batchTrainee.getUserMail())).collect(Collectors.toList()); // use this availableCandidateEmails
+			// use optional in streams
+			
+		/*
+		 * for (BatchTraineeDto batchTraineeDto : batchTraineeList1) { for (Candidate
+		 * candidate : candidateList) { if(candidate.getEmail() !=
+		 * batchTraineeDto.getUserMail()) {
+		 * 
+		 * } } }
+		 */
 		batchTraineeList.removeAll(batchTraineeList1);
 		
 		System.out.println("======><"+batchTraineeList);

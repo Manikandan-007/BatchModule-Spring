@@ -35,7 +35,8 @@ public class BatchImplDao {
 				con = ConnectionUtil.getConnection();
 				con.setAutoCommit(false);
 				addbatches = con.setSavepoint("SP1");
-				String sql = "insert into batches (name, start_date, end_date, trainer_id, active_hrs, start_time) values (?,?,?,?,?,?)";
+				String sql = "insert into batches (name, start_date, end_date, trainer_id, active_hrs, start_time)"
+						+ " values (?,?,?,?,?,?)";
 				pst = con.prepareStatement(sql);
 				pst.setString(1, batchDataDto.getBatch().getName());
 				pst.setDate(2, batchDataDto.getBatch().getStartDate());

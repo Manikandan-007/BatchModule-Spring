@@ -27,20 +27,26 @@ public class BatchTraineeDaoImpl {
 		ResultSet rs = null;
 		Savepoint addTrainee = null;
 		try {
+			String dayDataStr = "";
+			int count = 0;
 				for (BatchTraineeDto batchTraineeDto : batchTraineeList) {
+					
+						dayDataStr = dayDataStr + "("+batchTraineeDto.getBatchId()+","+batchTraineeDto.getUserMail()+")";
+						count ++;
+						if(count < batchTraineeList.size()) {
+							dayDataStr = dayDataStr + ",";
+						}
+					}
+				
 				con = ConnectionUtil.getConnection();
 				con.setAutoCommit(false);
 				addTrainee = con.setSavepoint("SP1");
 				String sql = "insert into batch_trainees (batch_id, candidate_id) values (?,(select id from candidate where email = ?))";
 				pst = con.prepareStatement(sql);
-				pst.setInt(1, batchTraineeDto.getBatchId());
-				pst.setString(2, batchTraineeDto.getUserMail());
 
 				pst.executeUpdate();
 				pst.close();
 				con.commit();
-				}
-				
 		} catch (DBException e) {
 			throw new DBException(e.getMessage());
 		}catch (SQLException e) {
